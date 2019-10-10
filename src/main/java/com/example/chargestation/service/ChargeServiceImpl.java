@@ -3,10 +3,14 @@ package com.example.chargestation.service;
 import com.example.chargestation.entity.ChargeSession;
 import com.example.chargestation.entity.StatusEnum;
 import com.example.chargestation.entity.SummaryResponse;
-import org.springframework.stereotype.Service;
+import com.example.chargestation.exception.SessionNotFoundException;
+import com.example.chargestation.repository.SessionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.UUID;
 
 /**
  * The type Charge service.
@@ -18,10 +22,12 @@ public class ChargeServiceImpl implements ChargeService {
     private TreeMap<LocalDateTime, String> startTimeSessionIds = new TreeMap<>();
     private TreeMap<LocalDateTime, String> stopTimeSessionIds = new TreeMap<>();
     private TreeMap<LocalDateTime, String> totalTimeSessionIds = new TreeMap<>();
-    private Map<String, ChargeSession> sessions = new HashMap<>();
+
+    @Autowired
+    private SessionRepository sessionRepository;
 
     /**
-     * Start session charge session.
+     * Start charge session.
      *
      * Required complexity: O(log (n))
      * Actual complexity: O(log (n))
@@ -30,7 +36,7 @@ public class ChargeServiceImpl implements ChargeService {
      * @return the charge session
      */
     @Override
-    public ChargeSession startSession(String stationId) {
+    public ChargeSession startCharging(String stationId) {
         LocalDateTime currentTime = LocalDateTime.now();
         String sessionId = UUID.randomUUID().toString();
 
@@ -40,7 +46,7 @@ public class ChargeServiceImpl implements ChargeService {
         chargeSession.setStatus(StatusEnum.IN_PROGRESS);
         chargeSession.setStartedAt(currentTime);
 
-        sessions.put(sessionId, chargeSession);             // O(1)
+        sessionRepository.save(chargeSession);              // O(1)
 
         startTimeSessionIds.put(currentTime, sessionId);    // O(log (n))
         totalTimeSessionIds.put(currentTime, sessionId);    // O(log (n))
@@ -49,7 +55,7 @@ public class ChargeServiceImpl implements ChargeService {
     }
 
     /**
-     * Stop charging charge session.
+     * Stop charge session.
      *
      * Required complexity: O(log n)
      * Actual complexity: O(log (n))
@@ -58,17 +64,20 @@ public class ChargeServiceImpl implements ChargeService {
      * @return the charge session
      */
     @Override
-    public ChargeSession stopCharging(String stationId) {
+    public ChargeSession stopCharging(String stationId) throws SessionNotFoundException {
         LocalDateTime currentTime = LocalDateTime.now();
 
-        ChargeSession chargeSession = sessions.get(stationId);      // O(1)
+        ChargeSession chargeSession = sessionRepository.findById(stationId);      // O(1)
+        if (chargeSession == null) {
+            throw new SessionNotFoundException(stationId);
+        }
         chargeSession.setStatus(StatusEnum.FINISHED);
         chargeSession.setStoppedAt(currentTime);
 
-        sessions.put(stationId, chargeSession);                     // O(1)
+        sessionRepository.save(chargeSession);                      // O(1)
 
         stopTimeSessionIds.put(currentTime, stationId);
-        totalTimeSessionIds.remove(chargeSession.getStartedAt());   // O(log (n))
+//        totalTimeSessionIds.remove(chargeSession.getStartedAt());   // O(log (n))
         totalTimeSessionIds.put(currentTime, stationId);            // O(log (n))
 
         return chargeSession;
@@ -84,11 +93,11 @@ public class ChargeServiceImpl implements ChargeService {
      */
     @Override
     public List<ChargeSession> retrieveSessions() {
-        return new ArrayList<>(sessions.values());  // O(1)
+        return sessionRepository.findAll();  // O(1)
     }
 
     /**
-     * Retrieve summary response.
+     * Retrieve sessions response.
      *
      * Required complexity: O(log n)
      * Actual complexity: O(1)

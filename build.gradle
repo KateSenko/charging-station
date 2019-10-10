@@ -11,6 +11,7 @@ plugins {
     id 'org.springframework.boot' version '2.1.9.RELEASE'
     id 'io.spring.dependency-management' version '1.0.8.RELEASE'
     id 'java'
+    id 'groovy'
 }
 
 group = 'com.example'
@@ -21,12 +22,25 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    test {
+        java { srcDirs = [] }
+        groovy { srcDirs += ['src/main/java'] }
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
     compile("org.springframework.boot:spring-boot-starter-web")
-    testCompile group: 'org.spockframework', name: 'spock-core', version: '1.3-groovy-2.5'
-    testCompile group: 'com.h2database', name: 'h2', version: '1.4.199'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testCompile(
+            'junit:junit:4.12',
+            'org.codehaus.groovy:groovy-all:2.5.8',
+            'org.spockframework:spock-core:1.3-groovy-2.5',
+            'org.spockframework:spock-spring:1.3-groovy-2.5',
+            'org.jmockit:jmockit:1.8'
+
+    )
+
 
 }

@@ -2,6 +2,7 @@ package com.example.chargestation.service;
 
 import com.example.chargestation.entity.ChargeSession;
 import com.example.chargestation.entity.SummaryResponse;
+import com.example.chargestation.exception.SessionNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public interface ChargeService {
      * @param stationId the station id
      * @return the charge session
      */
-    ChargeSession startSession(String stationId);
+    ChargeSession startCharging(String stationId);
 
     /**
      * Stop charging charge session.
@@ -25,7 +26,7 @@ public interface ChargeService {
      * @param id the id
      * @return the charge session
      */
-    ChargeSession stopCharging(String id);
+    ChargeSession stopCharging(String id) throws SessionNotFoundException;
 
     /**
      * Retrieve sessions list.

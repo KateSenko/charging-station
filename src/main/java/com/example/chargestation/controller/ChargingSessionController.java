@@ -2,8 +2,8 @@ package com.example.chargestation.controller;
 
 import com.example.chargestation.entity.ChargeSession;
 import com.example.chargestation.entity.SummaryResponse;
+import com.example.chargestation.exception.SessionNotFoundException;
 import com.example.chargestation.service.ChargeService;
-import com.example.chargestation.service.ChargeServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +18,11 @@ public class ChargingSessionController {
 
     @PostMapping
     public ChargeSession startCharging(@RequestBody ChargeSession chargeSessionRequest) {
-        return chargeService.startSession(chargeSessionRequest.getStationId());
+        return chargeService.startCharging(chargeSessionRequest.getStationId());
     }
 
     @PutMapping(value = "/{id}")
-    public ChargeSession stopCharging(@PathVariable("id") String id){
+    public ChargeSession stopCharging(@PathVariable("id") String id) throws SessionNotFoundException {
         return chargeService.stopCharging(id);
     }
 
