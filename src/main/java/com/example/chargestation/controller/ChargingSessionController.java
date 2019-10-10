@@ -3,6 +3,7 @@ package com.example.chargestation.controller;
 import com.example.chargestation.entity.ChargeSession;
 import com.example.chargestation.entity.SummaryResponse;
 import com.example.chargestation.service.ChargeService;
+import com.example.chargestation.service.ChargeServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +18,7 @@ public class ChargingSessionController {
 
     @PostMapping
     public ChargeSession startCharging(@RequestBody ChargeSession chargeSessionRequest) {
-        ChargeSession chargeSession = chargeService.startSession(chargeSessionRequest.getStationId());
-        return chargeSession;
+        return chargeService.startSession(chargeSessionRequest.getStationId());
     }
 
     @PutMapping(value = "/{id}")
