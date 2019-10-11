@@ -1,7 +1,7 @@
 package com.example.chargestation.service;
 
 import com.example.chargestation.entity.ChargeSession;
-import com.example.chargestation.entity.SummaryResponse;
+import com.example.chargestation.controller.response.SummaryResponse;
 import com.example.chargestation.exception.SessionNotFoundException;
 import org.springframework.stereotype.Service;
 

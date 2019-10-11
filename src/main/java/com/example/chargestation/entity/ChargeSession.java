@@ -1,14 +1,11 @@
 package com.example.chargestation.entity;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 public class ChargeSession {
 
     private String id;
     private String stationId;
-    private LocalDateTime startedAt;
-    private LocalDateTime stoppedAt;
+    private Long startedAt;
+    private Long stoppedAt;
     private StatusEnum status;
 
     public String getId() {
@@ -27,11 +24,11 @@ public class ChargeSession {
         this.stationId = stationId;
     }
 
-    public LocalDateTime getStartedAt() {
+    public Long getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(LocalDateTime startedAt) {
+    public void setStartedAt(Long startedAt) {
         this.startedAt = startedAt;
     }
 
@@ -43,11 +40,11 @@ public class ChargeSession {
         this.status = status;
     }
 
-    public LocalDateTime getStoppedAt() {
+    public Long getStoppedAt() {
         return stoppedAt;
     }
 
-    public void setStoppedAt(LocalDateTime stoppedAt) {
+    public void setStoppedAt(Long stoppedAt) {
         this.stoppedAt = stoppedAt;
     }
 }

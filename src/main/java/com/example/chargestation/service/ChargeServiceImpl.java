@@ -2,26 +2,24 @@ package com.example.chargestation.service;
 
 import com.example.chargestation.entity.ChargeSession;
 import com.example.chargestation.entity.StatusEnum;
-import com.example.chargestation.entity.SummaryResponse;
+import com.example.chargestation.controller.response.SummaryResponse;
 import com.example.chargestation.exception.SessionNotFoundException;
 import com.example.chargestation.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * The type Charge service.
  */
 public class ChargeServiceImpl implements ChargeService {
 
-    private static final long SUMMARY_TIME_INTERVAL_IN_MIN = 1L;
+    private static final long SUMMARY_TIME_INTERVAL_IN_NANOSEC = 60_000_000_000L;
 
-    private TreeMap<LocalDateTime, String> startTimeSessionIds = new TreeMap<>();
-    private TreeMap<LocalDateTime, String> stopTimeSessionIds = new TreeMap<>();
-    private TreeMap<LocalDateTime, String> totalTimeSessionIds = new TreeMap<>();
+    private ConcurrentSkipListMap<Long, String> startTimeSessionIds = new ConcurrentSkipListMap<>();
+    private ConcurrentSkipListMap<Long, String> stopTimeSessionIds = new ConcurrentSkipListMap<>();
 
     @Autowired
     private SessionRepository sessionRepository;
@@ -37,7 +35,7 @@ public class ChargeServiceImpl implements ChargeService {
      */
     @Override
     public ChargeSession startCharging(String stationId) {
-        LocalDateTime currentTime = LocalDateTime.now();
+        Long currentTime = System.currentTimeMillis();
         String sessionId = UUID.randomUUID().toString();
 
         ChargeSession chargeSession = new ChargeSession();
@@ -49,7 +47,6 @@ public class ChargeServiceImpl implements ChargeService {
         sessionRepository.save(chargeSession);              // O(1)
 
         startTimeSessionIds.put(currentTime, sessionId);    // O(log (n))
-        totalTimeSessionIds.put(currentTime, sessionId);    // O(log (n))
 
         return chargeSession;
     }
@@ -65,20 +62,20 @@ public class ChargeServiceImpl implements ChargeService {
      */
     @Override
     public ChargeSession stopCharging(String stationId) throws SessionNotFoundException {
-        LocalDateTime currentTime = LocalDateTime.now();
-
         ChargeSession chargeSession = sessionRepository.findById(stationId);      // O(1)
         if (chargeSession == null) {
             throw new SessionNotFoundException(stationId);
         }
+
+        Long currentTime = System.currentTimeMillis();
+
         chargeSession.setStatus(StatusEnum.FINISHED);
         chargeSession.setStoppedAt(currentTime);
 
         sessionRepository.save(chargeSession);                      // O(1)
 
-        stopTimeSessionIds.put(currentTime, stationId);
-//        totalTimeSessionIds.remove(chargeSession.getStartedAt());   // O(log (n))
-        totalTimeSessionIds.put(currentTime, stationId);            // O(log (n))
+        stopTimeSessionIds.put(currentTime, stationId);             // O(log (n))
+        startTimeSessionIds.remove(chargeSession.getStartedAt());   //?
 
         return chargeSession;
     }
@@ -106,12 +103,14 @@ public class ChargeServiceImpl implements ChargeService {
      */
     @Override
     public SummaryResponse retrieveSummary() {
-        LocalDateTime minuteAgoTime = LocalDateTime.now().minusMinutes(SUMMARY_TIME_INTERVAL_IN_MIN);
+        Long minuteAgoTime = System.currentTimeMillis() - 60000;
+        Integer startedCount = startTimeSessionIds.tailMap(minuteAgoTime).size();   // O(1)
+        Integer stoppedCount = stopTimeSessionIds.tailMap(minuteAgoTime).size();    // O(1)
 
         SummaryResponse summaryResponse = new SummaryResponse();
-        summaryResponse.setTotalCount(totalTimeSessionIds.tailMap(minuteAgoTime).size());   // O(1)
-        summaryResponse.setStartedCount(startTimeSessionIds.tailMap(minuteAgoTime).size()); // O(1)
-        summaryResponse.setStoppedCount(stopTimeSessionIds.tailMap(minuteAgoTime).size());  // O(1)
+        summaryResponse.setStartedCount(startedCount);
+        summaryResponse.setStoppedCount(stoppedCount);
+        summaryResponse.setTotalCount(startedCount  + stoppedCount);
 
         return summaryResponse;
     }

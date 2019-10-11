@@ -6,16 +6,16 @@ import com.example.chargestation.exception.SessionNotFoundException
 import com.example.chargestation.repository.SessionRepository
 import spock.lang.Specification
 
-import java.time.LocalDateTime
-
+/**
+ *	Unit tests for {@link ChargeServiceImpl}
+ */
 class ChargeServiceImplTest extends Specification {
 
 	def sessionRepository = Mock(SessionRepository)
 	def chargeServiceImpl = new ChargeServiceImpl(sessionRepository: sessionRepository)
 
-	def defaultSessionId = 'session_id'
 	def defaultStationId = 'station _id'
-	def defaultStartTime = LocalDateTime.now()
+	def defaultStartTime = System.nanoTime()
 
 	def 'sut saves charge session with IN_PROGRESS status on start request'() {
 		given:
@@ -25,7 +25,7 @@ class ChargeServiceImplTest extends Specification {
 			def result = chargeServiceImpl.startCharging(defaultStationId)
 
 		then:
-			1 * sessionRepository.save()
+			1 * sessionRepository.save(_)
 
 		and:
 			with(result) {
@@ -39,7 +39,7 @@ class ChargeServiceImplTest extends Specification {
 
 	def 'sut updates charge session with FINISHED status on stop request'() {
 		given:
-			def chargeSession = initChargeSession(defaultSessionId)
+			def chargeSession = initChargeSession(defaultStationId)
 
 		when:
 			def result = chargeServiceImpl.stopCharging(defaultStationId)
@@ -48,7 +48,7 @@ class ChargeServiceImplTest extends Specification {
 			1 * sessionRepository.findById(defaultStationId) >> chargeSession
 		and:
 			with(result) {
-				id == defaultSessionId
+				id != null
 				stationId == defaultStationId
 				startedAt == defaultStartTime
 				stoppedAt != null
@@ -91,23 +91,25 @@ class ChargeServiceImplTest extends Specification {
 
 	def 'sut returns sessions summary for the last minute'() {
 		given:
-			def expectedStartedCount = 3
+			def expectedStartedCount = 1
 			def expectedStoppedCount = 2
-			def expectedTotalCount = 5
+			def expectedTotalCount = 3
 			def stationId1 = 'station_1'
 			def stationId2 = 'station_2'
 			def stationId3 = 'station_3'
 		and:
-			sessionRepository.findById(stationId1) >> initChargeSession(stationId1)
-			sessionRepository.findById(stationId2) >> initChargeSession(stationId2)
-			sessionRepository.findById(stationId3) >> initChargeSession(stationId3)
+			def session1 = chargeServiceImpl.startCharging(stationId1)
+			def session2 = chargeServiceImpl.startCharging(stationId2)
+			def session3 = chargeServiceImpl.startCharging(stationId3)
+		and:
+			sessionRepository.findById(stationId1) >> session1
+			sessionRepository.findById(stationId2) >> session2
+			sessionRepository.findById(stationId3) >> session3
 
 		when:
-			chargeServiceImpl.startCharging(stationId1)
 			chargeServiceImpl.stopCharging(stationId1)
-			chargeServiceImpl.startCharging(stationId2)
 			chargeServiceImpl.stopCharging(stationId2)
-			chargeServiceImpl.startCharging(stationId3)
+
 		and:
 			def result = chargeServiceImpl.retrieveSummary()
 
@@ -118,9 +120,9 @@ class ChargeServiceImplTest extends Specification {
 
 	}
 
-	def initChargeSession(String sessionId) {
-		new ChargeSession(id: sessionId,
-				stationId: defaultStationId,
+	def initChargeSession(String stationId) {
+		new ChargeSession(id: 'some_id',
+				stationId: stationId,
 				startedAt: defaultStartTime,
 				status: StatusEnum.IN_PROGRESS)
 	}

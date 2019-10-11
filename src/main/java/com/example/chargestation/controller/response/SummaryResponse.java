@@ -1,4 +1,4 @@
-package com.example.chargestation.entity;
+package com.example.chargestation.controller.response;
 
 public class SummaryResponse {
 
