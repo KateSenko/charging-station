@@ -12,9 +12,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-/**
- * The charge service implementation
- */
 public class ChargeServiceImpl implements ChargeService {
 
     private static final long SUMMARY_TIME_INTERVAL_IN_NANOSEC = 60_000_000_000L;
@@ -46,7 +43,7 @@ public class ChargeServiceImpl implements ChargeService {
         chargeSession.setStartedAt(LocalDateTime.now());
         chargeSession.setUpdateNanoTime(currentNanoTime);
 
-        sessionRepository.save(chargeSession);              // O(1)
+        sessionRepository.save(chargeSession);                  // O(1)
 
         startTimeSessionIds.put(currentNanoTime, sessionId);    // O(log (n))
 
@@ -64,20 +61,20 @@ public class ChargeServiceImpl implements ChargeService {
      */
     @Override
     public ChargeSession stopCharging(String sessionId) throws SessionNotFoundException {
-        ChargeSession chargeSession = sessionRepository.findById(sessionId);      // O(1)
+        ChargeSession chargeSession = sessionRepository.findById(sessionId);  // O(1)
         if (chargeSession == null) {
             throw new SessionNotFoundException(sessionId);
         }
 
-        startTimeSessionIds.remove(chargeSession.getUpdateNanoTime());   //?
+        startTimeSessionIds.remove(chargeSession.getUpdateNanoTime());         //O(log (n))
 
         Long currentNanoTime = System.nanoTime();
         chargeSession.setStatus(StatusEnum.FINISHED);
         chargeSession.setStoppedAt(LocalDateTime.now());
         chargeSession.setUpdateNanoTime(currentNanoTime);
 
-        stopTimeSessionIds.put(currentNanoTime, sessionId);             // O(log (n))
-        sessionRepository.save(chargeSession);                      // O(1)
+        stopTimeSessionIds.put(currentNanoTime, sessionId);                     // O(log (n))
+        sessionRepository.save(chargeSession);                                  // O(1)
 
         return chargeSession;
     }
