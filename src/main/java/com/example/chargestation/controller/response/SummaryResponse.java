@@ -1,5 +1,8 @@
 package com.example.chargestation.controller.response;
 
+/**
+ * POJO for get summary response
+ */
 public class SummaryResponse {
 
     private int totalCount;

@@ -1,8 +1,6 @@
 package com.example.chargestation.controller;
 
-import com.example.chargestation.controller.response.ChargeSessionResponse;
-import com.example.chargestation.controller.request.ChargeSessionRequest;
-import com.example.chargestation.controller.response.ChargeSessionResponseConverter;
+import com.example.chargestation.controller.request.StartSessionRequest;
 import com.example.chargestation.controller.response.SummaryResponse;
 import com.example.chargestation.entity.ChargeSession;
 import com.example.chargestation.exception.SessionNotFoundException;
@@ -18,25 +16,20 @@ public class ChargingSessionController {
 
     @Autowired
     private ChargeService chargeService;
-    @Autowired
-    private ChargeSessionResponseConverter chargeSessionResponseConverter;
 
     @PostMapping
-    public ChargeSessionResponse startCharging(@RequestBody ChargeSessionRequest chargeSessionRequest) {
-        ChargeSession chargeSession = chargeService.startCharging(chargeSessionRequest.getStationId());
-        return chargeSessionResponseConverter.createFrom(chargeSession);
+    public ChargeSession startCharging(@RequestBody StartSessionRequest startSessionRequest) {
+        return chargeService.startCharging(startSessionRequest.getStationId());
     }
 
     @PutMapping(value = "/{id}")
-    public ChargeSessionResponse stopCharging(@PathVariable("id") String id) throws SessionNotFoundException {
-        ChargeSession chargeSession = chargeService.stopCharging(id);
-        return chargeSessionResponseConverter.createFrom(chargeSession);
+    public ChargeSession stopCharging(@PathVariable("id") String id) throws SessionNotFoundException {
+        return chargeService.stopCharging(id);
     }
 
     @GetMapping
-    public List<ChargeSessionResponse> retrieveCharges(){
-        List<ChargeSession> chargeSessions = chargeService.retrieveSessions();
-        return chargeSessionResponseConverter.createFrom(chargeSessions);
+    public List<ChargeSession> retrieveCharges(){
+        return chargeService.retrieveSessions();
     }
 
     @GetMapping(value = "summary")

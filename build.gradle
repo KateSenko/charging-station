@@ -38,8 +38,8 @@ dependencies {
             'org.codehaus.groovy:groovy-all:2.5.8',
             'org.spockframework:spock-core:1.3-groovy-2.5',
             'org.spockframework:spock-spring:1.3-groovy-2.5',
-            'org.jmockit:jmockit:1.8'
-
+            'org.jmockit:jmockit:1.8',
+            'org.exparity:hamcrest-date:2.0.7'
     )
 
 

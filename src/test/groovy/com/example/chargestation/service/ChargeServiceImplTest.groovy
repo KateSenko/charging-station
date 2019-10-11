@@ -6,8 +6,10 @@ import com.example.chargestation.exception.SessionNotFoundException
 import com.example.chargestation.repository.SessionRepository
 import spock.lang.Specification
 
+import java.time.LocalDateTime
+
 /**
- *	Unit tests for {@link ChargeServiceImpl}
+ * 	Unit tests for {@link ChargeServiceImpl}
  */
 class ChargeServiceImplTest extends Specification {
 
@@ -15,7 +17,7 @@ class ChargeServiceImplTest extends Specification {
 	def chargeServiceImpl = new ChargeServiceImpl(sessionRepository: sessionRepository)
 
 	def defaultStationId = 'station _id'
-	def defaultStartTime = System.nanoTime()
+	def defaultStartTime = LocalDateTime.now()
 
 	def 'sut saves charge session with IN_PROGRESS status on start request'() {
 		given:
@@ -124,6 +126,7 @@ class ChargeServiceImplTest extends Specification {
 		new ChargeSession(id: 'some_id',
 				stationId: stationId,
 				startedAt: defaultStartTime,
-				status: StatusEnum.IN_PROGRESS)
+				status: StatusEnum.IN_PROGRESS,
+				updateNanoTime: 1L)
 	}
 }

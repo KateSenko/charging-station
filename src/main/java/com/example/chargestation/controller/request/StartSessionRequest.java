@@ -1,9 +1,9 @@
 package com.example.chargestation.controller.request;
 
 /**
- *
+ *  POJO for start session request
  */
-public class ChargeSessionRequest {
+public class StartSessionRequest {
     private String stationId;
 
     public String getStationId() {

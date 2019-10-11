@@ -7,12 +7,13 @@ import com.example.chargestation.exception.SessionNotFoundException;
 import com.example.chargestation.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * The type Charge service.
+ * The charge service implementation
  */
 public class ChargeServiceImpl implements ChargeService {
 
@@ -35,18 +36,19 @@ public class ChargeServiceImpl implements ChargeService {
      */
     @Override
     public ChargeSession startCharging(String stationId) {
-        Long currentTime = System.currentTimeMillis();
+        Long currentNanoTime = System.nanoTime();
         String sessionId = UUID.randomUUID().toString();
 
         ChargeSession chargeSession = new ChargeSession();
         chargeSession.setId(sessionId);
         chargeSession.setStationId(stationId);
         chargeSession.setStatus(StatusEnum.IN_PROGRESS);
-        chargeSession.setStartedAt(currentTime);
+        chargeSession.setStartedAt(LocalDateTime.now());
+        chargeSession.setUpdateNanoTime(currentNanoTime);
 
         sessionRepository.save(chargeSession);              // O(1)
 
-        startTimeSessionIds.put(currentTime, sessionId);    // O(log (n))
+        startTimeSessionIds.put(currentNanoTime, sessionId);    // O(log (n))
 
         return chargeSession;
     }
@@ -57,25 +59,25 @@ public class ChargeServiceImpl implements ChargeService {
      * Required complexity: O(log n)
      * Actual complexity: O(log (n))
      *
-     * @param stationId the station id
+     * @param sessionId the station id
      * @return the charge session
      */
     @Override
-    public ChargeSession stopCharging(String stationId) throws SessionNotFoundException {
-        ChargeSession chargeSession = sessionRepository.findById(stationId);      // O(1)
+    public ChargeSession stopCharging(String sessionId) throws SessionNotFoundException {
+        ChargeSession chargeSession = sessionRepository.findById(sessionId);      // O(1)
         if (chargeSession == null) {
-            throw new SessionNotFoundException(stationId);
+            throw new SessionNotFoundException(sessionId);
         }
 
-        Long currentTime = System.currentTimeMillis();
+        startTimeSessionIds.remove(chargeSession.getUpdateNanoTime());   //?
 
+        Long currentNanoTime = System.nanoTime();
         chargeSession.setStatus(StatusEnum.FINISHED);
-        chargeSession.setStoppedAt(currentTime);
+        chargeSession.setStoppedAt(LocalDateTime.now());
+        chargeSession.setUpdateNanoTime(currentNanoTime);
 
+        stopTimeSessionIds.put(currentNanoTime, sessionId);             // O(log (n))
         sessionRepository.save(chargeSession);                      // O(1)
-
-        stopTimeSessionIds.put(currentTime, stationId);             // O(log (n))
-        startTimeSessionIds.remove(chargeSession.getStartedAt());   //?
 
         return chargeSession;
     }
@@ -103,7 +105,8 @@ public class ChargeServiceImpl implements ChargeService {
      */
     @Override
     public SummaryResponse retrieveSummary() {
-        Long minuteAgoTime = System.currentTimeMillis() - 60000;
+        Long minuteAgoTime = System.nanoTime() - SUMMARY_TIME_INTERVAL_IN_NANOSEC;
+
         Integer startedCount = startTimeSessionIds.tailMap(minuteAgoTime).size();   // O(1)
         Integer stoppedCount = stopTimeSessionIds.tailMap(minuteAgoTime).size();    // O(1)
 

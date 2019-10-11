@@ -1,12 +1,18 @@
 package com.example.chargestation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.time.LocalDateTime;
+
 public class ChargeSession {
 
     private String id;
     private String stationId;
-    private Long startedAt;
-    private Long stoppedAt;
+    private LocalDateTime startedAt;
+    private LocalDateTime stoppedAt;
     private StatusEnum status;
+    @JsonIgnore
+    private Long updateNanoTime;
 
     public String getId() {
         return id;
@@ -24,11 +30,11 @@ public class ChargeSession {
         this.stationId = stationId;
     }
 
-    public Long getStartedAt() {
+    public LocalDateTime getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(Long startedAt) {
+    public void setStartedAt(LocalDateTime startedAt) {
         this.startedAt = startedAt;
     }
 
@@ -40,11 +46,19 @@ public class ChargeSession {
         this.status = status;
     }
 
-    public Long getStoppedAt() {
+    public LocalDateTime getStoppedAt() {
         return stoppedAt;
     }
 
-    public void setStoppedAt(Long stoppedAt) {
+    public void setStoppedAt(LocalDateTime stoppedAt) {
         this.stoppedAt = stoppedAt;
+    }
+
+    public Long getUpdateNanoTime() {
+        return updateNanoTime;
+    }
+
+    public void setUpdateNanoTime(Long updateNanoTime) {
+        this.updateNanoTime = updateNanoTime;
     }
 }
