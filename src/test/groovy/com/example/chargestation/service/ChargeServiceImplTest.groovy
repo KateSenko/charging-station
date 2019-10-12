@@ -17,6 +17,7 @@ class ChargeServiceImplTest extends Specification {
 	def chargeServiceImpl = new ChargeServiceImpl(sessionRepository)
 
 	def defaultStationId = 'station _id'
+	def defaultSessionId = 'some_id'
 	def defaultStartTime = LocalDateTime.now()
 
 	def 'sut saves charge session with IN_PROGRESS status on start request'() {
@@ -75,6 +76,22 @@ class ChargeServiceImplTest extends Specification {
 			exception.message == errorMessage
 	}
 
+	def 'sut does not stop already finished charge session'() {
+		given:
+			def sessionId = 'some_id'
+			def finishedChargeSession = new ChargeSession(id: sessionId,
+					stationId: defaultStationId,
+					status: StatusEnum.FINISHED)
+
+		when:
+			chargeServiceImpl.stopCharging(sessionId)
+
+		then:
+			1 * sessionRepository.findById(sessionId) >> finishedChargeSession
+		and:
+			0 * sessionRepository.save(_)
+	}
+
 	def 'sut returns all charge sessions on retrieve request'() {
 		given:
 			def sessionId1 = 'session_id_1'
@@ -123,7 +140,7 @@ class ChargeServiceImplTest extends Specification {
 	}
 
 	def initChargeSession(String stationId) {
-		new ChargeSession(id: 'some_id',
+		new ChargeSession(id: defaultSessionId,
 				stationId: stationId,
 				startedAt: defaultStartTime,
 				status: StatusEnum.IN_PROGRESS,

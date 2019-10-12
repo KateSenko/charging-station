@@ -1,13 +1,12 @@
 package com.example.chargestation.service;
 
+import com.example.chargestation.controller.response.SummaryResponse;
 import com.example.chargestation.entity.ChargeSession;
 import com.example.chargestation.entity.StatusEnum;
-import com.example.chargestation.controller.response.SummaryResponse;
 import com.example.chargestation.exception.SessionNotFoundException;
 import com.example.chargestation.repository.SessionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,7 +36,7 @@ public class ChargeServiceImpl implements ChargeService {
 
     /**
      * Start charge session.
-     *
+     * <p>
      * Required complexity: O(log (n))
      * Actual complexity: O(log (n))
      *
@@ -64,12 +63,14 @@ public class ChargeServiceImpl implements ChargeService {
             startSessionLock.unlock();
             LOGGER.error(UNEXPECTED_ERROR_MESSAGE, e);
         }
+        startSessionLock.unlock();
+
         return chargeSession;
     }
 
     /**
      * Stop charge session.
-     *
+     * <p>
      * Required complexity: O(log (n))
      * Actual complexity: O(log (n))
      *
@@ -83,29 +84,33 @@ public class ChargeServiceImpl implements ChargeService {
         if (chargeSession == null) {
             throw new SessionNotFoundException(sessionId);
         }
-
-        startTimeSessionIds.remove(chargeSession.getUpdateNanoTime());         //O(log (n))
+        if (chargeSession.getStatus() != null
+                && chargeSession.getStatus().equals(StatusEnum.FINISHED)) {
+            return chargeSession;
+        }
 
         Long currentNanoTime = System.nanoTime();
         chargeSession.setStatus(StatusEnum.FINISHED);
         chargeSession.setStoppedAt(LocalDateTime.now());
-        chargeSession.setUpdateNanoTime(currentNanoTime);
 
         stopSessionLock.lock();
         try {
+            startTimeSessionIds.remove(chargeSession.getUpdateNanoTime());          // O(log (n))
             stopTimeSessionIds.put(currentNanoTime, sessionId);                     // O(log (n))
+            chargeSession.setUpdateNanoTime(currentNanoTime);
             sessionRepository.save(chargeSession);                                  // O(1)
         } catch (Exception e) {
             stopSessionLock.unlock();
             LOGGER.error(UNEXPECTED_ERROR_MESSAGE, e);
         }
+        stopSessionLock.unlock();
 
         return chargeSession;
     }
 
     /**
      * Retrieve sessions list.
-     *
+     * <p>
      * Required complexity: O(n)
      * Actual complexity: O(1)
      *
@@ -118,7 +123,7 @@ public class ChargeServiceImpl implements ChargeService {
 
     /**
      * Retrieve sessions response.
-     *
+     * <p>
      * Required complexity: O(log (n))
      * Actual complexity: O(1)
      *
@@ -139,11 +144,12 @@ public class ChargeServiceImpl implements ChargeService {
             summaryLock.unlock();
             LOGGER.error(UNEXPECTED_ERROR_MESSAGE, e);
         }
+        summaryLock.unlock();
 
         SummaryResponse summaryResponse = new SummaryResponse();
         summaryResponse.setStartedCount(startedCount);
         summaryResponse.setStoppedCount(stoppedCount);
-        summaryResponse.setTotalCount(startedCount  + stoppedCount);
+        summaryResponse.setTotalCount(startedCount + stoppedCount);
 
         return summaryResponse;
     }
