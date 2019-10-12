@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 class ChargeServiceImplTest extends Specification {
 
 	def sessionRepository = Mock(SessionRepository)
-	def chargeServiceImpl = new ChargeServiceImpl(sessionRepository: sessionRepository)
+	def chargeServiceImpl = new ChargeServiceImpl(sessionRepository)
 
 	def defaultStationId = 'station _id'
 	def defaultStartTime = LocalDateTime.now()

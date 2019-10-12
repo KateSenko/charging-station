@@ -16,8 +16,8 @@ public class ChargeStationConfiguration {
     }
 
     @Bean
-    public ChargeService chargeService(){
-        return new ChargeServiceImpl();
+    public ChargeService chargeService(SessionRepository sessionRepository){
+        return new ChargeServiceImpl(sessionRepository);
     }
 
 }
