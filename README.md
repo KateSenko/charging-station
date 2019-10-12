@@ -22,7 +22,7 @@ Alternatively you can use the Gradle wrapper from command line like so:
 ./gradlew bootRun
 ```
 
-Also ypu can run provided jar file with command line:
+Also you can run provided jar file with command line:
 
 ```shell
 java -jar charge-station-0.0.1-SNAPSHOT.jar
