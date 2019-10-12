@@ -3,7 +3,7 @@
 Based on [Spring Boot](http://projects.spring.io/spring-boot/)
 
 ## Test coverage
-100% of classes and 97% lines of code are covered with tests according to Intellij Idea report
+100% of classes and 91% lines of code are covered with tests according to Intellij Idea report
 
 ## Requirements
 
